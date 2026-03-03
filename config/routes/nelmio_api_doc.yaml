@@ -1,0 +1,13 @@
+# config/routes/nelmio_api_doc.yaml
+
+# 1. Definimos la ruta de la web de Swagger directamente
+app_api_doc:
+    path: /api/doc
+    methods: [GET]
+    controller: nelmio_api_doc.controller.swagger_ui
+
+# 2. Definimos la ruta del JSON que necesita la web para funcionar
+app_api_doc_json:
+    path: /api/doc.json
+    methods: [GET]
+    controller: nelmio_api_doc.controller.swagger

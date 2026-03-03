@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New MedicalRecord{% endblock %}
+
+{% block body %}
+    <h1>Create new MedicalRecord</h1>
+
+    {{ include('medical_record/_form.html.twig') }}
+
+    <a href="{{ path('app_medical_record_index') }}">back to list</a>
+{% endblock %}

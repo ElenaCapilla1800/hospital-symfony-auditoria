@@ -1,0 +1,44 @@
+# config/packages/nelmio_api_doc.yaml
+
+nelmio_api_doc:
+    # 1. ÁREAS DE LA API:
+    # Define qué rutas debe "leer" Nelmio para generar la documentación.
+    areas:
+        path_patterns:
+            # Documentamos todo lo que empiece por /api.
+            # (?!/doc$) es una regla para que no intente documentarse a sí mismo.
+            - ^/api(?!/doc$)
+
+    # 2. DOCUMENTACIÓN ABIERTA (OpenAPI):
+    # Aquí configuramos lo que el usuario ve visualmente en la web de Swagger.
+    documentation:
+        info:
+            title: 🏥 API Gestión Hospitalaria Symfony
+            description: >
+                Esta API permite la gestión de historiales médicos de forma segura.
+                Implementa autenticación mediante JWT (JSON Web Tokens).
+            version: 1.0.0
+
+        # 3. SEGURIDAD (Bearer Auth):
+        # Configuramos el botón "Authorize" de Swagger para que sepa manejar el Token.
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+                    description: >
+                        Introduce solo tu token JWT.
+                        El sistema añadirá automáticamente el prefijo 'Bearer ' por ti.
+
+        # 4. APLICACIÓN DE SEGURIDAD:
+        # Esto hace que aparezca el icono del "candado" en todos los endpoints de la API.
+        security:
+            - Bearer: []
+
+    # 5. RENDERIZADO DE LA INTERFAZ:
+    # Asegura que la web de Swagger se cargue con el tema visual correcto.
+    html_config:
+        swagger_ui_config:
+            displayOperationId: true
+            transports: ['http', 'https']

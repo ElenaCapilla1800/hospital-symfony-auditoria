@@ -1,0 +1,36 @@
+{
+	"info": {
+		"name": "Hospital Symfony",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login Admin",
+			"request": {
+				"method": "POST",
+				"url": "http://localhost:8000/login",
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{"key": "_username", "value": "admin@hospital.com"},
+						{"key": "_password", "value": "tu_password"}
+					]
+				}
+			}
+		},
+		{
+			"name": "Ver Auditoría",
+			"request": {
+				"method": "GET",
+				"url": "http://localhost:8000/admin/logs"
+			}
+		},
+		{
+			"name": "Ver Sospechosos 24h",
+			"request": {
+				"method": "GET",
+				"url": "http://localhost:8000/admin/suspicious"
+			}
+		}
+	]
+}
