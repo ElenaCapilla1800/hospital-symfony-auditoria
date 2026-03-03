@@ -1,0 +1,16 @@
+# config/routes.yaml
+
+# 1. CARGA DE CONTROLADORES AUTOMÁTICA
+# Esto ya lo tenías: le dice a Symfony que busque rutas en los atributos PHP
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+# 2. RUTA PARA EL LOGIN DE LA API (Punto 25 y 26)
+# Esta ruta NO necesita un controlador físico.
+# LexikJWT la interceptará automáticamente gracias a la configuración en security.yaml
+api_login_check:
+    path: /api/login_check
+    methods: [POST] # Solo permitimos el envío de credenciales por POST

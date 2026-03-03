@@ -1,0 +1,26 @@
+# config/packages/lexik_jwt_authentication.yaml
+
+lexik_jwt_authentication:
+    # 1. LLAVE PRIVADA: Se usa para "firmar" el token cuando el usuario hace login.
+    # Es como el sello de cera de un sobre oficial.
+    secret_key: '%env(resolve:JWT_SECRET_KEY)%'
+
+    # 2. LLAVE PÚBLICA: Se usa para "verificar" el token en cada petición API.
+    # Permite al servidor saber que el token es auténtico sin revelar la llave privada.
+    public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
+
+    # 3. FRASE DE PASO: La contraseña que protege las llaves anteriores.
+    pass_phrase: '%env(JWT_PASSPHRASE)%'
+
+    # 4. TIEMPO DE VIDA (Opcional pero recomendado para el Punto 25)
+    # Define cuánto tiempo es válido el token antes de caducar (en segundos).
+    # 3600 segundos = 1 hora.
+    token_ttl: 3600
+
+    # 5. EXTRACCIÓN DEL TOKEN
+    # Le decimos al sistema que busque el token en la cabecera "Authorization: Bearer ..."
+    token_extractors:
+        authorization_header:
+            enabled: true
+            prefix:  Bearer
+        # También podrías habilitar cookies si fuera necesario, pero para REST usamos Bearer.

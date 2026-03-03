@@ -1,0 +1,44 @@
+{# templates/medical_record/index.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Listado de Historiales{% endblock %}
+
+{% block body %}
+    <h1>Historiales Médicos</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Paciente</th>
+                <th>Médico Responsable</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for medical_record in medical_records %}
+            <tr>
+                <td>{{ medical_record.id }}</td>
+                <td>{{ medical_record.patientName }}</td>
+                <td>{{ medical_record.doctor.name }}</td> {# Mostramos quién lo creó #}
+                <td>
+                    {# CUALQUIER médico puede VER el detalle #}
+                    <a href="{{ path('app_medical_record_show', {'id': medical_record.id}) }}">Ver detalle</a>
+
+                    {# SOLO el dueño verá el enlace de EDITAR #}
+                    {% if is_granted('RECORD_EDIT', medical_record) %}
+                        | <a href="{{ path('app_medical_record_edit', {'id': medical_record.id}) }}">Editar</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">No hay registros médicos disponibles.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_medical_record_new') }}">Crear nuevo historial</a>
+{% endblock %}

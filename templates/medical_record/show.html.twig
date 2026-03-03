@@ -1,0 +1,23 @@
+{# templates/medical_record/show.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Detalle del Historial</h1>
+
+    <table class="table">
+        <tbody>
+            <tr><th>Paciente</th><td>{{ medical_record.patientName }}</td></tr>
+            <tr><th>Diagnóstico</th><td>{{ medical_record.diagnosis }}</td></tr>
+            <tr><th>Tratamiento</th><td>{{ medical_record.treatment }}</td></tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_medical_record_index') }}">Volver al listado</a>
+
+    {# El botón de editar solo aparece si el Voter da el OK #}
+    {% if is_granted('RECORD_EDIT', medical_record) %}
+        | <a href="{{ path('app_medical_record_edit', {'id': medical_record.id}) }}">Editar este registro</a>
+        | {{ include('medical_record/_delete_form.html.twig') }}
+    {% endif %}
+{% endblock %}
