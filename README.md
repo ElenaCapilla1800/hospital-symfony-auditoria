@@ -1,63 +1,96 @@
 # 🏥 Hospital Symfony - Gestión Médica y Auditoría de Seguridad
 
-Este proyecto es una aplicación web para la gestión de historiales clínicos, desarrollada en **Symfony 7** (o 6.4). Se centra en la trazabilidad de datos sensibles y el cumplimiento de normativas de seguridad (RGPD) mediante un sistema de auditoría interna.
+Aplicación web para la gestión de historiales clínicos, desarrollada en **Symfony 7**. Se centra en la trazabilidad de datos sensibles y el cumplimiento de normativas de seguridad (RGPD) mediante un sistema de auditoría interna y control de acceso granular por roles.
 
 ## 🚀 Requisitos previos
 
-* **PHP:** 8.2 o superior
-* **Composer:** 2.0+
-* **Gestor de BD:** MySQL 8.0 o MariaDB
-* **Symfony CLI:** Opcional (pero recomendado)
+- **Docker Desktop** (con WSL2 en Windows)
+- **DDEV** v1.24+ ([instalación](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/))
+- **Git**
 
-## 🛠️ Instalación y Configuración
+## 🛠️ Instalación y configuración
 
 1. **Clonar el repositorio:**
 
-   ```bash
-   git clone [https://github.com/tu-usuario/hospital-symfony.git](https://github.com/tu-usuario/hospital-symfony.git)
-   cd hospital-symfony
+```bash
+   git clone https://github.com/ElenaCapilla1800/hospital-symfony-auditoria.git
+   cd hospital-symfony-auditoria
+```
 
-2. **Instalar dependencias de PHP:**
+1. **Levantar el entorno con DDEV:**
 
-   ```bash
-   composer install
+```bash
+   ddev start
+```
 
-3. **Configurar el entorno:**
+1. **Instalar dependencias:**
 
-    Crea o edita el archivo .env.local y configura tu base de datos:
-    DATABASE_URL="mysql://usuario:password@127.0.0.1:3306/hospital_db?serverVersion=8.0"
+```bash
+   ddev composer install
+```
 
-4. **Configurar el entorno:**
+1. **Crear la base de datos y aplicar migraciones:**
 
-    ```bash
-    php bin/console doctrine:database:create
-    php bin/console doctrine:migrations:migrate
-    php bin/console doctrine:fixtures:load
+```bash
+   ddev exec php bin/console doctrine:migrations:migrate --no-interaction
+```
 
-5. **Iniciar el servidor:**
+1. **Cargar los datos de ejemplo (fixtures):**
 
-   ```bash
-   symfony server:start
+```bash
+   ddev exec php bin/console doctrine:fixtures:load --no-interaction
+```
 
-## 6. Decisiones de Diseño de Seguridad
+1. **Abrir el proyecto:**
 
-**Centralización de la Auditoría:** Se ha diseñado la entidad `AccessLog` como un registro inmutable. Al usar una relación `ManyToOne` con `User`, aseguramos la integridad referencial de quién realiza la acción.
+```bash
+   ddev launch
+```
 
-**Gestión de Intentos Denegados:** La decisión de incluir el campo `granted (bool)` permite no solo auditar el uso legítimo, sino realizar análisis forense sobre intentos de intrusión.
+### Usuarios de prueba (fixtures)
 
-**Optimización de Consultas (DQL):** En el panel de administración se utiliza `Join` para evitar el problema de las "N+1 consultas", optimizando el rendimiento del servidor bajo carga.
+| Email | Contraseña | Rol |
+| --- | --- | --- |
 
-**Protección RGPD:** El sistema registra la dirección IP y el tipo de acción (ver/editar) sobre datos sensibles de salud, cumpliendo con la normativa vigente de trazabilidad de datos médicos.
+| <doctor@test.com> | 123456 | ROLE_DOCTOR |
 
-## 7. Colección de Postman
+| <garcia@test.com> | 123456 | ROLE_DOCTOR |
 
-La colección de pruebas se encuentra en la carpeta /postman del proyecto e incluye los siguientes endpoints clave:
+| <admin@hospital.com> | admin123 | ROLE_ADMIN |
 
-1. **POST `/login`**: Autenticación: POST /login (Envío de credenciales para obtener sesión).
-2. **GET `/admin/logs`**: Auditoría General: GET /admin/logs (Soporta filtros ?email=, ?action= y ?date=).
-3. **GET `/admin/suspicious`**: Reporte de Riesgo: GET /admin/suspicious (Filtro automatizado de intentos fallidos en 24h).
+## ✅ Tests
 
-## 8. Contenido Adicional en el Repositorio
+El proyecto incluye tests funcionales sobre autenticación y control de acceso (Voter de autorización por roles):
 
-**docs/captura_auditoria.png**: Captura de pantalla del log en funcionamiento.
-**docs/decisiones_seguridad.pdf**: Documento detallado de diseño.
+```bash
+ddev exec php bin/console doctrine:migrations:migrate --env=test --no-interaction
+ddev exec php bin/console doctrine:fixtures:load --env=test --no-interaction
+ddev exec php bin/phpunit
+```
+
+Cobertura actual: login (correcto/incorrecto), acceso no autenticado, y las reglas del `MedicalRecordVoter` (un médico solo accede a sus propios historiales; un administrador puede ver cualquiera pero no editar los ajenos).
+
+## 🔒 Decisiones de diseño de seguridad
+
+**Centralización de la auditoría:** la entidad `AccessLog` es un registro inmutable. La relación `ManyToOne` con `User` asegura la integridad referencial de quién realizó cada acción.
+
+**Registro de intentos denegados:** el campo `granted` (bool) permite auditar tanto el uso legítimo como los intentos de acceso no autorizado, habilitando análisis forense básico.
+
+**Optimización de consultas (DQL):** el panel de administración usa `Join` para evitar el problema de las N+1 consultas.
+
+**Protección RGPD:** el sistema registra IP y tipo de acción (ver/editar) sobre datos sensibles de salud.
+
+**Control de acceso por Voter:** la autorización granular (quién puede ver/editar cada historial concreto) se implementa mediante un `Voter` de Symfony, no solo mediante roles a nivel de ruta — permite reglas como "el admin ve todo pero solo el propietario edita".
+
+## 📬 Colección de Postman
+
+En `/postman`, incluye:
+
+- `POST /login` — autenticación por formulario.
+- `GET /admin/logs` — auditoría general (filtros por `?email=`, `?action=`, `?date=`).
+- `GET /admin/suspicious` — intentos denegados en las últimas 24h.
+
+## 📄 Contenido adicional
+
+- `docs/captura_auditoria.png` — captura del log en funcionamiento.
+- `docs/decisiones_seguridad.pdf` — documento detallado de diseño.
