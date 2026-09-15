@@ -16,15 +16,11 @@ class MedicalRecordAccessTest extends WebTestCase
         $userRepository = $container->get(UserRepository::class);
         $recordRepository = $container->get(MedicalRecordRepository::class);
 
-        // 1. Buscamos a la Dra. García usando el email exacto de tus Fixtures
         $doctor = $userRepository->findOneBy(['email' => 'garcia@test.com']);
-
         if (!$doctor) {
             $this->markTestSkipped('No se encontró a garcia@test.com. Revisa si cargaste los fixtures en --env=test');
         }
 
-        // 2. Buscamos un historial que NO sea de la Dra. García
-        // (Por ejemplo, uno que pertenezca al Dr. Simi)
         $otherRecord = $recordRepository->createQueryBuilder('r')
             ->where('r.doctor != :doctor')
             ->setParameter('doctor', $doctor)
@@ -36,13 +32,104 @@ class MedicalRecordAccessTest extends WebTestCase
             $this->markTestSkipped('No hay registros de otros doctores para probar.');
         }
 
-        // 3. Logueamos a la Dra. García e intentamos EDITAR el registro ajeno
         $client->loginUser($doctor);
-
-        // La URL debe coincidir con tu ruta (normalmente /medical/record/{id}/edit)
         $client->request('GET', '/medical/record/' . $otherRecord->getId() . '/edit');
 
-        // 4. ASSERT: Si el Voter funciona, debe devolver un 403 (Forbidden)
         $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testDoctorCanEditOwnRecord(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+
+        $userRepository = $container->get(UserRepository::class);
+        $recordRepository = $container->get(MedicalRecordRepository::class);
+
+        $doctor = $userRepository->findOneBy(['email' => 'garcia@test.com']);
+        if (!$doctor) {
+            $this->markTestSkipped('No se encontró a garcia@test.com.');
+        }
+
+        $ownRecord = $recordRepository->findOneBy(['doctor' => $doctor]);
+        if (!$ownRecord) {
+            $this->markTestSkipped('La Dra. García no tiene ningún historial propio en las fixtures.');
+        }
+
+        $client->loginUser($doctor);
+        $client->request('GET', '/medical/record/' . $ownRecord->getId() . '/edit');
+
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testAdminCanViewAnyRecord(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+
+        $userRepository = $container->get(UserRepository::class);
+        $recordRepository = $container->get(MedicalRecordRepository::class);
+
+        $admin = $userRepository->findOneBy(['email' => 'admin@hospital.com']);
+        if (!$admin) {
+            $this->markTestSkipped('No se encontró a admin@hospital.com.');
+        }
+
+        $anyRecord = $recordRepository->findOneBy([]);
+        if (!$anyRecord) {
+            $this->markTestSkipped('No hay ningún historial en las fixtures.');
+        }
+
+        $client->loginUser($admin);
+        $client->request('GET', '/medical/record/' . $anyRecord->getId());
+
+        $this->assertResponseIsSuccessful();
+    }
+
+    /**
+     * El Voter da permiso de VIEW total al admin, pero NO de EDIT sobre
+     * historiales ajenos (canEdit no tiene excepción para ROLE_ADMIN).
+     * Este test documenta esa asimetría intencionada del diseño.
+     */
+    public function testAdminCannotEditOtherDoctorsRecord(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+
+        $userRepository = $container->get(UserRepository::class);
+        $recordRepository = $container->get(MedicalRecordRepository::class);
+
+        $admin = $userRepository->findOneBy(['email' => 'admin@hospital.com']);
+        $doctor = $userRepository->findOneBy(['email' => 'doctor@test.com']);
+        if (!$admin || !$doctor) {
+            $this->markTestSkipped('Faltan usuarios admin o doctor en las fixtures.');
+        }
+
+        $record = $recordRepository->findOneBy(['doctor' => $doctor]);
+        if (!$record) {
+            $this->markTestSkipped('El Dr. Simi no tiene ningún historial en las fixtures.');
+        }
+
+        $client->loginUser($admin);
+        $client->request('GET', '/medical/record/' . $record->getId() . '/edit');
+
+        $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testUnauthenticatedUserCannotAccessRecord(): void
+    {
+        $client = static::createClient();
+        $container = static::getContainer();
+
+        $recordRepository = $container->get(MedicalRecordRepository::class);
+        $anyRecord = $recordRepository->findOneBy([]);
+        if (!$anyRecord) {
+            $this->markTestSkipped('No hay ningún historial en las fixtures.');
+        }
+
+        // Sin login: el firewall debe redirigir a /login, no dar 200.
+        $client->request('GET', '/medical/record/' . $anyRecord->getId());
+
+        $this->assertResponseRedirects();
     }
 }
