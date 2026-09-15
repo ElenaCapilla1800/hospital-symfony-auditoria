@@ -47,6 +47,42 @@ Aplicación web para la gestión de historiales clínicos, desarrollada en **Sym
    ddev launch
 ```
 
+## 🐳 Alternativa: levantar con Docker Compose
+
+El proyecto también incluye un `docker-compose.yml` estándar (PHP-FPM + Nginx + MariaDB), independiente de DDEV, para quien prefiera Docker puro:
+
+1. **Levantar los contenedores:**
+
+```bash
+   docker compose up -d --build
+```
+
+1. **Instalar dependencias:**
+
+```bash
+   docker compose exec php composer install
+```
+
+1. **Generar las claves JWT:**
+
+```bash
+   docker compose exec php php bin/console lexik:jwt:generate-keypair
+```
+
+1. **Base de datos:**
+
+```bash
+   docker compose exec php php bin/console doctrine:database:create
+   docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
+   docker compose exec php php bin/console doctrine:fixtures:load --no-interaction
+```
+
+1. Visita `http://localhost:8090`.
+
+> **Nota:** DDEV y este `docker-compose.yml` no deben ejecutarse a la vez sobre el mismo checkout — ambos gestionan `DATABASE_URL` de forma distinta (DDEV genera un `.env.local` propio) y comparten el mismo puerto de base de datos. Para usar Docker Compose, detén DDEV primero (`ddev stop`).
+>
+> DDEV usa [Mutagen](https://ddev.readthedocs.io/) para sincronización de archivos optimizada en Windows/Mac, por lo que resulta notablemente más rápido en desarrollo diario. Este `docker-compose.yml` usa bind mounts estándar (más simple, pero más lento en Windows) — se incluye como referencia de containerización manual, no como entorno principal de desarrollo.
+
 ### Usuarios de prueba (fixtures)
 
 | Email | Contraseña | Rol |

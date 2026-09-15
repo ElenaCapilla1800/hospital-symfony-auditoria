@@ -1,0 +1,36 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - database
+    environment:
+      - APP_ENV=dev
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8090:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+
+  database:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: hospital_db
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
