@@ -17,3 +17,9 @@
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+ 
+# Archivos residuales de comandos PowerShell (Invoke-RestMethod) 
+-Body 
+-ContentType 
+-Method 
+Invoke-RestMethod 
