@@ -1,4 +1,4 @@
-name: medical-records
+name: hospital-symfony-auditoria
 type: symfony
 docroot: public
 php_version: "8.4"
